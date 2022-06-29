@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const http = require('@actions/http-client');
 
 async function triggerScan() {
-  const scanTarget = `${process.env.GITHUB_SERVER}/${process.env.GITHUB_REPOSITORY}`;
+  const scanTarget = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
   core.info('Scan target: ' + scanTarget);
   const scanUrl = `${process.env.CS_SCAN_URL}/scan/ci`;
   const client = new http.HttpClient();
