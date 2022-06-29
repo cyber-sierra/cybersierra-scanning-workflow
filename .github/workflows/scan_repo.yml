@@ -1,0 +1,17 @@
+on:
+  push
+
+name: Scan repo workflow
+
+jobs:
+  my-job:
+    name: ci scan job
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: scan
+      uses: ./
+      env:
+        CS_API_TOKEN: ${{ secrets.CS_API_TOKEN }}
+        CS_SCAN_URL: http://ae42e9de01a5b4866ad8a9ad06f75593-348764138.ap-southeast-1.elb.amazonaws.com:7777

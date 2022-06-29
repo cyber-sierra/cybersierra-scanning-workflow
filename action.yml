@@ -1,0 +1,8 @@
+name: 'Cyber Sierra Github CI Scan'
+description: 'Run Cyber Sierra repo scan with Github workflow'
+branding:
+  icon: 'activity'
+  color: 'green'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
