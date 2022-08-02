@@ -88,7 +88,7 @@ async function run() {
       core.setFailed('Please specify CS_SCAN_URL env');
     if (!process.env.CS_API_TOKEN)
       core.setFailed('Please specify CS_API_TOKEN env');
-    const scanTarget = `${process.env.GITHUB_SERVER}/${process.env.GITHUB_REPOSITORY}`;
+    const scanTarget = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
     return triggerScan(scanTarget);
   } catch (error) {
     core.setFailed(error);
