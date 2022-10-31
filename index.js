@@ -1,9 +1,14 @@
 const core = require('@actions/core');
 const http = require('@actions/http-client');
+const Table = require('cli-table');
 
 const PROCESSING_STATUS = 'Scanning';
 const SCAN_INTERVAL_CHECK = 5000;
 const CI_SCAN_TIMEOUT = 1000 * 60 * 15; // 15 minutes timeout
+const STATUS_TIME_OUT = 'Time out';
+const STATUS_PASS = 'Pass';
+const STATUS_FAIL = 'Fail';
+let baseUrlUI;
 
 async function triggerScan(scanTarget) {
   core.info('Scan target: ' + scanTarget);
@@ -33,6 +38,7 @@ async function triggerScan(scanTarget) {
   ) {
     core.info(JSON.stringify(jsonObj.result.response));
     core.info('Scan triggered successfully');
+    baseUrlUI = jsonObj.result.response.baseUrl;
     return getScanResult(jsonObj.result.response.scanId);
   }
   return core.setFailed(jsonObj.result.meta.message);
@@ -59,7 +65,7 @@ async function getScanResult(scanId) {
       if (jsonObj.result.response.status !== PROCESSING_STATUS) {
         clearInterval(intervalId);
         core.info('Scan completed');
-        return summaryResult(jsonObj.result.response);
+        return summaryResult(jsonObj.result.response, scanId);
       }
       return core.info('Checking scan status...');
     }
@@ -68,18 +74,59 @@ async function getScanResult(scanId) {
   setTimeout(() => {
     clearInterval(intervalId);
     core.setFailed('Scan timeout');
+    printSummary(scanId);
   }, CI_SCAN_TIMEOUT);
 }
 
-function summaryResult(result) {
-  if (result.status === 'successful') {
+function printSummary(scanId, result = null) {
+  const table = new Table({
+    head: ['Scan Id', 'Critical', 'High', 'Medium', 'Low', 'Status'],
+    title: 'Vulnerability Summary',
+  });
+  core.success(`Scan dashboard: ${baseUrlUI}/security/${scanId}/dashboard`);
+
+  let critical = 'N/A';
+  let high = 'N/A';
+  let medium = 'N/A';
+  let low = 'N/A';
+
+  let status = STATUS_PASS;
+  if (result === null) {
+    status = STATUS_TIME_OUT;
+  } else {
+    if (
+      result.critical === null &&
+      result.high === null &&
+      result.medium === null &&
+      result.low === null
+    ) {
+      status = STATUS_FAIL;
+    } else {
+      critical = result.critical;
+      high = result.high;
+      medium = result.medium;
+      low = result.low;
+      if (critical > 0 && high > 0) {
+        status = STATUS_FAIL;
+      }
+    }
+  }
+
+  table.push([scanId, critical, high, medium, low, status]);
+  core.info(table);
+}
+
+function summaryResult(result, scanId) {
+  if (result.status === 'Successful') {
     if (result.critical > 0) {
       core.setFailed('Scan completed with critical issues');
     }
     core.info('Scan completed successfully');
-    process.exit(0);
+  } else {
+    core.setFailed('Scan completed with issues');
   }
-  core.setFailed('Scan completed with issues');
+  printSummary(scanId, result);
+  process.exit(0);
 }
 
 async function run() {
@@ -88,7 +135,7 @@ async function run() {
       core.setFailed('Please specify CS_SCAN_URL env');
     if (!process.env.CS_API_TOKEN)
       core.setFailed('Please specify CS_API_TOKEN env');
-    const scanTarget = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
+    const scanTarget = `${process.env.GITHUB_SERVER}/${process.env.GITHUB_REPOSITORY}`;
     return triggerScan(scanTarget);
   } catch (error) {
     core.setFailed(error);
