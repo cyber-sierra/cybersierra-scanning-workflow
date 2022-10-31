@@ -83,7 +83,9 @@ function printSummary(scanId, result = null) {
     head: ['Scan Id', 'Critical', 'High', 'Medium', 'Low', 'Status'],
     title: 'Vulnerability Summary',
   });
-  core.success(`Scan dashboard: ${baseUrlUI}/security/${scanId}/dashboard`);
+
+  const dashboardUrl = `${baseUrlUI}/security/${scanId}/dashboard`;
+  core.info(`Scan dashboard: ` + dashboardUrl);
 
   let critical = 'N/A';
   let high = 'N/A';
