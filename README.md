@@ -58,7 +58,7 @@ jobs:
         uses: ./
         env:
           CS_API_TOKEN: ${{ secrets.CS_API_TOKEN }}
-          CS_SCAN_URL: https://829e-58-186-38-20.ap.ngrok.io
+          CS_SCAN_URL: "https://scanner-api.prod.eks.cybersierra.ai"
 ```
 
 ## References

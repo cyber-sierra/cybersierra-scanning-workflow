@@ -19,9 +19,12 @@ async function triggerScan(scanTarget) {
     scanUrl,
     [
       {
-        type: 'repo',
-        targets: [scanTarget],
-        keys: [],
+        scan: 'repo',
+        targets: [{
+          url: scanTarget,
+          provider: 'github',
+          branch: process.env.GITHUB_REF_NAME
+        }],
       },
     ],
     {
@@ -83,9 +86,7 @@ function printSummary(scanId, result = null) {
     head: ['Scan Id', 'Critical', 'High', 'Medium', 'Low', 'Status'],
     title: 'Vulnerability Summary',
   });
-
-  const dashboardUrl = `${baseUrlUI}/security/${scanId}/dashboard`;
-  core.info(`Scan dashboard: ` + dashboardUrl);
+  core.info(`Scan dashboard: ${baseUrlUI}/security/${scanId}/dashboard`);
 
   let critical = 'N/A';
   let high = 'N/A';
@@ -137,7 +138,7 @@ async function run() {
       core.setFailed('Please specify CS_SCAN_URL env');
     if (!process.env.CS_API_TOKEN)
       core.setFailed('Please specify CS_API_TOKEN env');
-    const scanTarget = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
+    const scanTarget = `${process.env.GITHUB_SERVER}/${process.env.GITHUB_REPOSITORY}`;
     return triggerScan(scanTarget);
   } catch (error) {
     core.setFailed(error);
