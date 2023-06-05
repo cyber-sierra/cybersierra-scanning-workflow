@@ -8,7 +8,7 @@ const CI_SCAN_TIMEOUT = 1000 * 60 * 15; // 15 minutes timeout
 const STATUS_TIME_OUT = 'Time out';
 const STATUS_PASS = 'Pass';
 const STATUS_FAIL = 'Fail';
-let baseUrlUI;
+const BASE_URL_DASHBOARD = 'https://beta.cybersierra.ai';
 
 async function triggerScan(scanTarget) {
   core.info('Scan target: ' + scanTarget);
@@ -20,11 +20,13 @@ async function triggerScan(scanTarget) {
     [
       {
         scan: 'repo',
-        targets: [{
-          url: scanTarget,
-          provider: 'github',
-          branch: process.env.GITHUB_REF_NAME
-        }],
+        targets: [
+          {
+            url: scanTarget,
+            provider: 'github',
+            branch: process.env.GITHUB_REF_NAME,
+          },
+        ],
       },
     ],
     {
@@ -41,7 +43,7 @@ async function triggerScan(scanTarget) {
   ) {
     core.info(JSON.stringify(jsonObj.result.response));
     core.info('Scan triggered successfully');
-    baseUrlUI = jsonObj.result.response.baseUrl;
+
     return getScanResult(jsonObj.result.response.scanId);
   }
   return core.setFailed(jsonObj.result.meta.message);
@@ -86,7 +88,9 @@ function printSummary(scanId, result = null) {
     head: ['Scan Id', 'Critical', 'High', 'Medium', 'Low', 'Status'],
     title: 'Vulnerability Summary',
   });
-  core.info(`Scan dashboard: ${baseUrlUI}/security/${scanId}/dashboard`);
+  core.info(
+    `Scan dashboard: ${BASE_URL_DASHBOARD}/security/${scanId}/dashboard`,
+  );
 
   let critical = 'N/A';
   let high = 'N/A';
@@ -138,7 +142,7 @@ async function run() {
       core.setFailed('Please specify CS_SCAN_URL env');
     if (!process.env.CS_API_TOKEN)
       core.setFailed('Please specify CS_API_TOKEN env');
-    const scanTarget = `${process.env.GITHUB_SERVER}/${process.env.GITHUB_REPOSITORY}`;
+    const scanTarget = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`;
     return triggerScan(scanTarget);
   } catch (error) {
     core.setFailed(error);
